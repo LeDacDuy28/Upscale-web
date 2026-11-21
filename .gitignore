@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Model weights, datasets & large binaries
+*.pth
+*.pt
+*.onnx
+*.state
+*.safetensors
+*.ckpt
+research/models/**/*.pth
+research/models/**/*.onnx
+research/Real-ESRGAN/experiments/
+research/BasicSR/experiments/
+research/weights/
+research/datasets/
+data/
+storage/
+
+# Backend runtime storage
+webapp/backend/storage/
+webapp/backend/*.db
+webapp/backend/*.sqlite3
+
+# Frontend
+webapp/frontend/node_modules/
+webapp/frontend/dist/
+webapp/frontend/.vite/
+
+# Environment & IDE
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

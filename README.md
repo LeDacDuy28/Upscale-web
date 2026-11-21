@@ -1,44 +1,83 @@
-# Towards Real-ESRGAN refinement for Realistic Image Restoration via Advanced Degradation and Knowledge Distillation
----
-<p align="center">
-    <img src="https://github.com/namle24/RealESRGAN_Degradation_KD/blob/main/assets/s2.png">
-    <img src="https://github.com/namle24/RealESRGAN_Degradation_KD/blob/main/assets/s3.png">
-</p>
-Limited to super complex images.</br>
-<p align="center">
-    <img src="https://github.com/namle24/RealESRGAN_Degradation_KD/blob/main/assets/s6.png">
-</p>
----
+# Web Upscale Ảnh dựa trên Real-ESRGAN (Degradation + Knowledge Distillation)
 
-## **Model's weights: You can install in: [RealESRGAN_Degradation_KD](https://drive.google.com/drive/u/5/folders/1kks1hFgBK5LVQqw3-0xMYh0V9de2B9FG)**
+Dự án Group Project (10 tuần) xây dựng ứng dụng web upscale ảnh (tương tự Upscayl) sử dụng model **Real-ESRGAN** cải tiến bằng **Advanced Degradation** và **Knowledge Distillation (Teacher → Student)** từ nghiên cứu `RealESRGAN_Degradation_KD`.
+
+> Xem toàn bộ kế hoạch chi tiết, phân công công việc (`A1–A15`, `B1–B11`, `C1–C11`), timeline và mốc M1–M4 tại **[PROJECT_PLAN.md](./PROJECT_PLAN.md)**.
 
 ---
 
-## **Projects that use BasicSR, and Real-ESRGAN**
-- [**Real-ESRGAN**](https://github.com/xinntao/Real-ESRGAN): A practical algorithm for general image restoration
-- [**BasicSR**](https://github.com/XPixelGroup/BasicSR): An open-source image and video restoration
+## Kiến trúc 3 phần trong Repository
 
-## License and Acknowledgement
-
-This project is released under the [Apache 2.0 license](LICENSE.txt).<br>
-
-## Citations
-Special thanks to the all researchers of Real-ESRGAN and BasicSR
-
-``` latex
-@misc{basicsr,
-  author =       {Xintao Wang and Liangbin Xie and Ke Yu and Kelvin C.K. Chan and Chen Change Loy and Chao Dong},
-  title =        {{BasicSR}: Open Source Image and Video Restoration Toolbox},
-  howpublished = {\url{https://github.com/XPixelGroup/BasicSR}},
-  year =         {2022}
-}
-@InProceedings{wang2021realesrgan,
-    author    = {Xintao Wang and Liangbin Xie and Chao Dong and Ying Shan},
-    title     = {Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data},
-    booktitle = {International Conference on Computer Vision Workshops (ICCVW)},
-    date      = {2021}
-}
+```text
+.
+├── PROJECT_PLAN.md                 # Tài liệu kế hoạch dự án (bản chính thức để nhóm chỉnh sửa)
+├── CONTRIBUTING.md                 # Quy ước nhánh (main/dev/feature/*) & Code Review
+├── docker-compose.yml              # Triển khai full stack (nginx, api, worker, redis, frontend)
+│
+├── research/                       # [PHẦN A - LÕI MODEL] Code nghiên cứu RealESRGAN_Degradation_KD
+│   ├── BasicSR/                    # Core BasicSR
+│   ├── Real-ESRGAN/                # Teacher & Student KD training configs
+│   ├── degradation/                # 3 phiên bản RealisticDegradationGenerator
+│   ├── src/                        # Custom model & subset training
+│   ├── tools/                      # Scripts tiền xử lý & tính PSNR/SSIM/NIQE
+│   ├── models/                     # Thư mục đặt trọng số .pth & model_card.md (không commit trọng số)
+│   └── experiments.md              # Nhật ký thí nghiệm & bảng ablation
+│
+├── serve/                          # [GIAO DIỆN CHUNG A ↔ B] Module inference dùng chung
+│   └── engine.py                   # Hàm upscale(...) bọc RealESRGANer + mock fallback
+│
+├── webapp/
+│   ├── backend/                    # [PHẦN B - BACKEND & WORKER] FastAPI + Redis/RQ Worker
+│   │   ├── openapi.json            # Hợp đồng API 5 endpoint (chốt tuần 1)
+│   │   ├── app/                    # API, validation (magic bytes), worker OOM retry, cleanup 1h
+│   │   └── tests/                  # Pytest unit & integration tests
+│   └── frontend/                   # [PHẦN C - FRONTEND & UX] React + Vite + TypeScript + Tailwind
+│       └── src/                    # Uploader, SettingsPanel, JobProgress, CompareViewer, AboutModel
+│
+├── deploy/                         # Cấu hình Nginx reverse proxy & deploy scripts
+└── docs/                           # Bản sao PROJECT_PLAN.md & Architecture Decision Records (ADRs)
 ```
 
-> Xintao Wang, Liangbin Xie, Ke Yu, Kelvin C.K. Chan, Chen Change Loy and Chao Dong. BasicSR: Open Source Image and Video Restoration Toolbox. <https://github.com/xinntao/BasicSR>, 2022.
+---
 
+## Phân công 3 phần
+
+| Phần | Phụ trách | Thư mục chính | Tài liệu hướng dẫn |
+| --- | --- | --- | --- |
+| **A. Model & Serving** | Duy, Ngoại binh | `research/`, `serve/` | [research/README.md](./research/README.md) · [serve/README.md](./serve/README.md) |
+| **B. Backend & Hạ tầng** | Hoàng, Thịnh, Thiên | `webapp/backend/`, `deploy/` | [webapp/backend/README.md](./webapp/backend/README.md) |
+| **C. Frontend, Tài liệu & PM** | Ngô, Dũng, Đức | `webapp/frontend/`, `docs/` | [webapp/frontend/README.md](./webapp/frontend/README.md) |
+
+---
+
+## Chạy nhanh để phát triển
+
+### 1. Chạy toàn bộ bằng Docker Compose
+```bash
+docker compose up --build
+```
+Truy cập web tại `http://localhost` (Nginx proxy qua Frontend `/` và Backend `/api/`).
+
+### 2. Chạy riêng Backend (chế độ Mock khi chưa có GPU/weights)
+```bash
+cd webapp/backend
+pip install -r requirements.txt
+set USE_MOCK_ENGINE=1
+uvicorn app.main:app --reload --port 8000
+```
+
+### 3. Chạy riêng Frontend
+```bash
+cd webapp/frontend
+npm install
+npm run dev
+```
+*(Nếu chưa chạy Backend, dùng `VITE_USE_MOCK=true npm run dev` để test giao diện với mock API).*
+
+---
+
+## Trích dẫn & Giấy phép
+
+Dự án phát hành theo giấy phép [Apache 2.0](./LICENSE), kế thừa từ **Real-ESRGAN** và **BasicSR**:
+- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN)
+- [BasicSR](https://github.com/XPixelGroup/BasicSR)

@@ -1,0 +1,170 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Real-ESRGAN Degradation + KD Upscaler API",
+    "version": "0.1.0",
+    "description": "Hợp đồng API tối thiểu chốt ở tuần 1 (Work item B1) giữa Phần B (Backend) và Phần C (Frontend)."
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service health status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthStatus" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "summary": "List available upscale models",
+        "responses": {
+          "200": {
+            "description": "List of supported models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ModelOption" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/upscale": {
+      "post": {
+        "summary": "Submit an image upscaling job",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "model": { "type": "string", "default": "realesrgan_x4plus_student" },
+                  "scale": { "type": "integer", "enum": [2, 4], "default": 4 },
+                  "format": { "type": "string", "enum": ["png", "jpg", "webp"], "default": "png" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job accepted and queued",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpscaleCreateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "summary": "Get job status and progress",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current job state",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobInfo" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/result": {
+      "get": {
+        "summary": "Download completed upscaled image",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upscaled binary image file",
+            "content": {
+              "image/png": {},
+              "image/jpeg": {},
+              "image/webp": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "required": ["status", "app_env", "gpu_available", "mock_engine"],
+        "properties": {
+          "status": { "type": "string" },
+          "app_env": { "type": "string" },
+          "gpu_available": { "type": "boolean" },
+          "mock_engine": { "type": "boolean" }
+        }
+      },
+      "ModelOption": {
+        "type": "object",
+        "required": ["id", "name", "description", "scales", "default_tile", "weights_available"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "scales": { "type": "array", "items": { "type": "integer" } },
+          "default_tile": { "type": "integer" },
+          "weights_available": { "type": "boolean" }
+        }
+      },
+      "UpscaleCreateResponse": {
+        "type": "object",
+        "required": ["job_id", "status"],
+        "properties": {
+          "job_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["queued", "processing", "done", "failed"] }
+        }
+      },
+      "JobInfo": {
+        "type": "object",
+        "required": ["job_id", "status", "progress", "model", "scale", "output_format"],
+        "properties": {
+          "job_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["queued", "processing", "done", "failed"] },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "message": { "type": ["string", "null"] },
+          "model": { "type": "string" },
+          "scale": { "type": "number" },
+          "output_format": { "type": "string" },
+          "processing_time_ms": { "type": ["integer", "null"] },
+          "error": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}
