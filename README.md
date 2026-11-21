@@ -2,9 +2,6 @@
 
 Dự án Group Project (10 tuần) xây dựng ứng dụng web upscale ảnh (tương tự Upscayl) sử dụng model **Real-ESRGAN** cải tiến bằng **Advanced Degradation** và **Knowledge Distillation (Teacher → Student)** từ nghiên cứu `RealESRGAN_Degradation_KD`.
 
-> Xem toàn bộ kế hoạch chi tiết, phân công công việc (`A1–A15`, `B1–B11`, `C1–C11`), timeline và mốc M1–M4 tại **[PROJECT_PLAN.md](./PROJECT_PLAN.md)**.
-
----
 
 ## Kiến trúc 3 phần trong Repository
 
@@ -40,15 +37,6 @@ Dự án Group Project (10 tuần) xây dựng ứng dụng web upscale ảnh (t
 
 ---
 
-## Phân công 3 phần
-
-| Phần | Phụ trách | Thư mục chính | Tài liệu hướng dẫn |
-| --- | --- | --- | --- |
-| **A. Model & Serving** | Duy, Ngoại binh | `research/`, `serve/` | [research/README.md](./research/README.md) · [serve/README.md](./serve/README.md) |
-| **B. Backend & Hạ tầng** | Hoàng, Thịnh, Thiên | `webapp/backend/`, `deploy/` | [webapp/backend/README.md](./webapp/backend/README.md) |
-| **C. Frontend, Tài liệu & PM** | Ngô, Dũng, Đức | `webapp/frontend/`, `docs/` | [webapp/frontend/README.md](./webapp/frontend/README.md) |
-
----
 
 ## Chạy nhanh để phát triển
 
